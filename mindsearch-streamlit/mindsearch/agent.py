@@ -26,6 +26,8 @@ from termcolor import colored
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from lagent.schema import ActionReturn
+
 class SearcherAgent(Internlm2Agent):
 
     def __init__(self, template='{query}', **kwargs) -> None:
@@ -49,8 +51,12 @@ class SearcherAgent(Internlm2Agent):
         print(colored(f'current query: {message}', 'green'))
         
         # Google検索を実行
-        search_results = models.google_search.search(message)
-        context = "\n".join([f"Title: {result['title']}\nURL: {result['link']}\nSnippet: {result['snippet']}\n" for result in search_results])
+        search_action_return: ActionReturn = models.google_search(message)
+        if search_action_return.status == ActionStatusCode.SUCCESS:
+            search_results = json.loads(search_action_return.result[0]['content'])
+            context = "\n".join([f"Title: {result['title']}\nURL: {result['link']}\nSnippet: {result['snippet']}\n" for result in search_results])
+        else:
+            context = "No search results available."
         
         # 検索結果をコンテキストとして追加
         message_with_context = f"{message}\n\nSearch Results:\n{context}"
