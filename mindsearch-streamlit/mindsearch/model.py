@@ -71,3 +71,18 @@ qwen = dict(type=GPTAPI,
             max_new_tokens=4096,
             repetition_penalty=1.02,
             stop_words=['<|im_end|>'])
+
+
+def create_model(model_format):
+    if model_format == 'internlm_server':
+        return LMDeployServer(**internlm_server)
+    elif model_format == 'internlm_client':
+        return LMDeployClient(**internlm_client)
+    elif model_format == 'internlm_hf':
+        return HFTransformerCasualLM(**internlm_hf)
+    elif model_format == 'gpt4':
+        return GPTAPI(**gpt4)
+    elif model_format == 'qwen':
+        return GPTAPI(**qwen)
+    else:
+        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
