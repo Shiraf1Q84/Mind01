@@ -1,10 +1,4 @@
-fastapi
-uvicorn
-python-multipart
-sse-starlette
-janus
-pydantic
 streamlit
-lagent 
-termcolor
+asyncio
+langchain
 google-api-python-client
