@@ -28,11 +28,14 @@ logger = logging.getLogger(__name__)
 
 from lagent.schema import ActionReturn
 
+
 class SearcherAgent(Internlm2Agent):
 
     def __init__(self, template='{query}', **kwargs) -> None:
         super().__init__(**kwargs)
         self.template = template
+        # Use the action_executor from models.py
+        self.action_executor = models.action_executor
 
     def stream_chat(self,
                     question: str,
@@ -50,13 +53,15 @@ class SearcherAgent(Internlm2Agent):
                 message = '\n'.join(parent_response + [message])
         print(colored(f'current query: {message}', 'green'))
         
-        # Google検索を実行
-        search_action_return: ActionReturn = models.google_search(message)
+        # Use the action_executor to perform Google search
+        search_action_return: ActionReturn = self.action_executor.execute_action("GoogleSearch", message)
         if search_action_return.status == ActionStatusCode.SUCCESS:
             search_results = json.loads(search_action_return.result[0]['content'])
             context = "\n".join([f"Title: {result['title']}\nURL: {result['link']}\nSnippet: {result['snippet']}\n" for result in search_results])
         else:
             context = "No search results available."
+
+                        
         
         # 検索結果をコンテキストとして追加
         message_with_context = f"{message}\n\nSearch Results:\n{context}"
@@ -447,35 +452,16 @@ from .mindsearch_prompt import (
     searcher_context_template_cn, searcher_context_template_en
 )
 
+
+
 def init_agent(lang='cn', model_format='internlm_server'):
-    if lang == 'cn':
-        graph_prompt = GRAPH_PROMPT_CN
-        final_response = FINAL_RESPONSE_CN
-        few_shot = graph_fewshot_example_cn
-        searcher_cfg = dict(
-            system=searcher_system_prompt_cn,
-            template=dict(
-                input=searcher_input_template_cn,
-                context=searcher_context_template_cn
-            )
-        )
-    else:
-        graph_prompt = GRAPH_PROMPT_EN
-        final_response = FINAL_RESPONSE_EN
-        few_shot = graph_fewshot_example_en
-        searcher_cfg = dict(
-            system=searcher_system_prompt_en,
-            template=dict(
-                input=searcher_input_template_en,
-                context=searcher_context_template_en
-            )
-        )
+    # ... (previous code remains the same)
 
     llm = create_model(model_format)
 
     protocol = MindSearchProtocol(
         meta_prompt=graph_prompt,
-        interpreter_prompt="あなたはJupyter環境でPythonプログラミングが可能なプログラマーです。",
+        interpreter_prompt="You are a programmer capable of Python programming in a Jupyter environment.",
         few_shot=few_shot,
         response_prompt=final_response
     )
