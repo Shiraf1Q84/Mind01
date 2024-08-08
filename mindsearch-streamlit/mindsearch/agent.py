@@ -1,4 +1,4 @@
-from .models import create_model
+from . import models
 from . import mindsearch_prompt
 
 import asyncio
@@ -21,13 +21,10 @@ from lagent.agents.internlm2_agent import Internlm2Protocol
 from lagent.schema import AgentReturn, AgentStatusCode, ModelStatusCode
 from termcolor import colored
 
-# ... (rest of the code from your provided mindsearch/agent.py file)
+# ... (rest of the imports)
 
-
-# 初始化日志记录
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class SearcherAgent(Internlm2Agent):
 
@@ -50,13 +47,21 @@ class SearcherAgent(Internlm2Agent):
                 ]
                 message = '\n'.join(parent_response + [message])
         print(colored(f'current query: {message}', 'green'))
-        for agent_return in super().stream_chat(message,
-                                                session_id=random.randint(
-                                                    0, 999999),
+        
+        # Google検索を実行
+        search_results = models.google_search.search(message)
+        context = "\n".join([f"Title: {result['title']}\nURL: {result['link']}\nSnippet: {result['snippet']}\n" for result in search_results])
+        
+        # 検索結果をコンテキストとして追加
+        message_with_context = f"{message}\n\nSearch Results:\n{context}"
+        
+        for agent_return in super().stream_chat(message_with_context,
+                                                session_id=random.randint(0, 999999),
                                                 **kwargs):
             agent_return.type = 'searcher'
             agent_return.content = question
             yield deepcopy(agent_return)
+
 
 
 class MindSearchProtocol(Internlm2Protocol):
@@ -427,7 +432,6 @@ class MindSearchAgent(BaseAgent):
                     break
         producer_thread.join()
         return
-
 from .models import create_model
 from .mindsearch_prompt import (
     GRAPH_PROMPT_CN, GRAPH_PROMPT_EN, FINAL_RESPONSE_CN, FINAL_RESPONSE_EN,
@@ -436,7 +440,6 @@ from .mindsearch_prompt import (
     searcher_input_template_cn, searcher_input_template_en,
     searcher_context_template_cn, searcher_context_template_en
 )
-
 
 def init_agent(lang='cn', model_format='internlm_server'):
     if lang == 'cn':
