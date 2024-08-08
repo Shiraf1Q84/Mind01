@@ -5,3 +5,4 @@ sse-starlette
 janus
 pydantic
 streamlit
+lagent 
