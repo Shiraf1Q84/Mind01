@@ -28,14 +28,13 @@ logger = logging.getLogger(__name__)
 
 from lagent.schema import ActionReturn
 
-
 class SearcherAgent(Internlm2Agent):
 
     def __init__(self, template='{query}', **kwargs) -> None:
         super().__init__(**kwargs)
         self.template = template
-        # Use the action_executor from models.py
-        self.action_executor = models.action_executor
+        # models.pyから更新されたget_action_executor()を使用
+        self.action_executor = models.get_action_executor()
 
     def stream_chat(self,
                     question: str,
@@ -51,15 +50,15 @@ class SearcherAgent(Internlm2Agent):
                     for item in parent_response
                 ]
                 message = '\n'.join(parent_response + [message])
-        print(colored(f'current query: {message}', 'green'))
+        print(colored(f'現在のクエリ: {message}', 'green'))
         
-        # Use the action_executor to perform Google search
+        # action_executorを使用してGoogle検索を実行
         search_action_return: ActionReturn = self.action_executor.execute_action("GoogleSearch", message)
         if search_action_return.status == ActionStatusCode.SUCCESS:
             search_results = json.loads(search_action_return.result[0]['content'])
-            context = "\n".join([f"Title: {result['title']}\nURL: {result['link']}\nSnippet: {result['snippet']}\n" for result in search_results])
+            context = "\n".join([f"タイトル: {result['title']}\nURL: {result['link']}\n概要: {result['snippet']}\n" for result in search_results])
         else:
-            context = "No search results available."
+            context = "検索結果がありません。"
 
                         
         
