@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from mindsearch.agent import init_agent
 import janus
+import lagent
+
 
 def parse_arguments():
     import argparse
