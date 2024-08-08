@@ -1,4 +1,4 @@
-from . import models
+from .models import create_model
 from . import mindsearch_prompt
 
 import asyncio
