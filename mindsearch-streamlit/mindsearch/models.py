@@ -37,13 +37,22 @@ class GoogleSearch(BaseAction):
                 }]
             )
 
-# Create an instance of GoogleSearch
-google_search = GoogleSearch()
+# グローバル変数としてaction_executorを定義
+global_action_executor = None
 
-# Check if GoogleSearch is already registered before adding it
-action_executor = ActionExecutor()
-if "GoogleSearch" not in action_executor.actions:
-    action_executor.register_action(google_search)
+def get_action_executor():
+    global global_action_executor
+    if global_action_executor is None:
+        global_action_executor = ActionExecutor()
+        google_search = GoogleSearch()
+        if "GoogleSearch" not in global_action_executor.actions:
+            global_action_executor.register_action(google_search)
+    return global_action_executor
+
+
+
+
+
 
 # The rest of your model initialization code...
 import mindsearch.agent.models as llm_factory
@@ -116,7 +125,6 @@ qwen = dict(type=GPTAPI,
 
 
 
-
 def create_model(model_format):
     if model_format == 'internlm_server':
         return LMDeployServer(**internlm_server)
@@ -129,4 +137,4 @@ def create_model(model_format):
     elif model_format == 'qwen':
         return GPTAPI(**qwen)
     else:
-        raise ValueError(f"Unsupported model format: {model_format}")
+        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
