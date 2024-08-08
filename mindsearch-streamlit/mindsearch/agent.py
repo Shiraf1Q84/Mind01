@@ -424,3 +424,51 @@ class MindSearchAgent(BaseAgent):
                     break
         producer_thread.join()
         return
+
+
+def init_agent(lang='cn', model_format='internlm_server'):
+    if lang == 'cn':
+        graph_prompt = GRAPH_PROMPT_CN
+        final_response = FINAL_RESPONSE_CN
+        few_shot = graph_fewshot_example_cn
+        searcher_cfg = dict(
+            system=searcher_system_prompt_cn,
+            template=dict(
+                input=searcher_input_template_cn,
+                context=searcher_context_template_cn
+            )
+        )
+    else:
+        graph_prompt = GRAPH_PROMPT_EN
+        final_response = FINAL_RESPONSE_EN
+        few_shot = graph_fewshot_example_en
+        searcher_cfg = dict(
+            system=searcher_system_prompt_en,
+            template=dict(
+                input=searcher_input_template_en,
+                context=searcher_context_template_en
+            )
+        )
+
+    if model_format == 'internlm_server':
+        llm = llm_factory.create_model('internlm_server')
+    elif model_format == 'internlm_client':
+        llm = llm_factory.create_model('internlm_client')
+    elif model_format == 'internlm_hf':
+        llm = llm_factory.create_model('internlm_hf')
+    elif model_format == 'gpt4':
+        llm = llm_factory.create_model('gpt4')
+    elif model_format == 'qwen':
+        llm = llm_factory.create_model('qwen')
+    else:
+        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
+
+    protocol = MindSearchProtocol(
+        meta_prompt=graph_prompt,
+        interpreter_prompt="あなたはJupyter環境でPythonプログラミングが可能なプログラマーです。",
+        few_shot=few_shot,
+        response_prompt=final_response
+    )
+
+    agent = MindSearchAgent(llm=llm, searcher_cfg=searcher_cfg, protocol=protocol)
+    return agent
