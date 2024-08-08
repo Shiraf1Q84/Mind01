@@ -7,3 +7,4 @@ pydantic
 streamlit
 lagent 
 termcolor
+google-api-python-client
