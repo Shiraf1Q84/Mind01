@@ -425,6 +425,14 @@ class MindSearchAgent(BaseAgent):
         producer_thread.join()
         return
 
+from .models import create_model
+from .mindsearch_prompt import (
+    GRAPH_PROMPT_CN, GRAPH_PROMPT_EN, FINAL_RESPONSE_CN, FINAL_RESPONSE_EN,
+    graph_fewshot_example_cn, graph_fewshot_example_en,
+    searcher_system_prompt_cn, searcher_system_prompt_en,
+    searcher_input_template_cn, searcher_input_template_en,
+    searcher_context_template_cn, searcher_context_template_en
+)
 
 def init_agent(lang='cn', model_format='internlm_server'):
     if lang == 'cn':
@@ -450,18 +458,7 @@ def init_agent(lang='cn', model_format='internlm_server'):
             )
         )
 
-    if model_format == 'internlm_server':
-        llm = llm_factory.create_model('internlm_server')
-    elif model_format == 'internlm_client':
-        llm = llm_factory.create_model('internlm_client')
-    elif model_format == 'internlm_hf':
-        llm = llm_factory.create_model('internlm_hf')
-    elif model_format == 'gpt4':
-        llm = llm_factory.create_model('gpt4')
-    elif model_format == 'qwen':
-        llm = llm_factory.create_model('qwen')
-    else:
-        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
+    llm = create_model(model_format)
 
     protocol = MindSearchProtocol(
         meta_prompt=graph_prompt,
