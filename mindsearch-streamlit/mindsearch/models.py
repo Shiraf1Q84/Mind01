@@ -1,29 +1,49 @@
 import os
 from datetime import datetime
 
-from lagent.actions import ActionExecutor
+from lagent.actions import ActionExecutor, BaseAction
+from lagent.schema import ActionReturn, ActionStatusCode
 
 from googleapiclient.discovery import build
 
-class GoogleSearch:
+class GoogleSearch(BaseAction):
+    name = "google_search"
+    description = "Perform a Google search and return the results"
+
     def __init__(self):
+        super().__init__()
         api_key = os.environ.get("GOOGLE_API_KEY")
         search_engine_id = os.environ.get("GOOGLE_SEARCH_ENGINE_ID")
         self.service = build("customsearch", "v1", developerKey=api_key)
         self.search_engine_id = search_engine_id
 
-    def search(self, query, num_results=5):
+    def __call__(self, query: str, num_results: int = 5) -> ActionReturn:
         try:
             result = self.service.cse().list(q=query, cx=self.search_engine_id, num=num_results).execute()
             items = result.get('items', [])
-            return [{'title': item['title'], 'link': item['link'], 'snippet': item['snippet']} for item in items]
+            search_results = [{'title': item['title'], 'link': item['link'], 'snippet': item['snippet']} for item in items]
+            
+            return ActionReturn(
+                status=ActionStatusCode.SUCCESS,
+                result=[{
+                    "content": json.dumps(search_results, ensure_ascii=False),
+                    "type": "text"
+                }]
+            )
         except Exception as e:
-            print(f"Error during Google search: {e}")
-            return []
+            return ActionReturn(
+                status=ActionStatusCode.ERROR,
+                result=[{
+                    "content": f"Error during Google search: {str(e)}",
+                    "type": "text"
+                }]
+            )
 
-# BingBrowserの代わりにGoogleSearchを使用
+# GoogleSearchのインスタンスを作成
 google_search = GoogleSearch()
-action_executor = ActionExecutor(actions=[google_search.search])
+
+# ActionExecutorにGoogleSearchインスタンスを渡す
+action_executor = ActionExecutor(actions=[google_search])
 
 import mindsearch.agent.models as llm_factory
 from mindsearch.agent.mindsearch_agent import (MindSearchAgent,
