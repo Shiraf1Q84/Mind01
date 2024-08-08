@@ -6,12 +6,9 @@ from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-# from mindsearch import init_agent
-# from mindsearch.agent import init_agent
 from mindsearch import agent
 import janus
-import lagent
-
+from typing import Union, List, Dict
 
 def parse_arguments():
     import argparse
@@ -23,7 +20,6 @@ def parse_arguments():
                         help='Model format')
     return parser.parse_args()
 
-
 args = parse_arguments()
 app = FastAPI(docs_url='/')
 
@@ -33,11 +29,9 @@ app.add_middleware(CORSMiddleware,
                    allow_methods=['*'],
                    allow_headers=['*'])
 
-
 class GenerationParams(BaseModel):
     inputs: Union[str, List[Dict]]
     agent_cfg: Dict = dict()
-
 
 @app.post('/solve')
 async def run(request: GenerationParams):
@@ -122,7 +116,6 @@ async def run(request: GenerationParams):
     agent = init_agent(lang=args.lang, model_format=args.model_format)
     return EventSourceResponse(generate())
 
-
 # Configure Streamlit
 st.title("MindSearch Demo")
 
@@ -134,11 +127,11 @@ model_format = st.selectbox("Select model format:", ["internlm_server"])
 # Button to trigger the search
 if st.button("Search"):
     # Initialize the agent
-    agent = init_agent(lang=lang, model_format=model_format)
+    search_agent = agent.init_agent(lang=lang, model_format=model_format)
 
     # Run the search and display the results
     with st.spinner("Searching..."):
-        for response in agent.stream_chat(inputs):
+        for response in search_agent.stream_chat(inputs):
             st.write(response)
 
 # Run the Streamlit app
