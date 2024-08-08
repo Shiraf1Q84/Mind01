@@ -1,7 +1,29 @@
 import os
 from datetime import datetime
 
-from lagent.actions import ActionExecutor, BingBrowser
+from lagent.actions import ActionExecutor
+
+from googleapiclient.discovery import build
+
+class GoogleSearch:
+    def __init__(self):
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        search_engine_id = os.environ.get("GOOGLE_SEARCH_ENGINE_ID")
+        self.service = build("customsearch", "v1", developerKey=api_key)
+        self.search_engine_id = search_engine_id
+
+    def search(self, query, num_results=5):
+        try:
+            result = self.service.cse().list(q=query, cx=self.search_engine_id, num=num_results).execute()
+            items = result.get('items', [])
+            return [{'title': item['title'], 'link': item['link'], 'snippet': item['snippet']} for item in items]
+        except Exception as e:
+            print(f"Error during Google search: {e}")
+            return []
+
+# BingBrowserの代わりにGoogleSearchを使用
+google_search = GoogleSearch()
+action_executor = ActionExecutor(actions=[google_search.search])
 
 import mindsearch.agent.models as llm_factory
 from mindsearch.agent.mindsearch_agent import (MindSearchAgent,
@@ -13,10 +35,6 @@ from mindsearch.agent.mindsearch_prompt import (
     searcher_context_template_en, searcher_input_template_cn,
     searcher_input_template_en, searcher_system_prompt_cn,
     searcher_system_prompt_en)
-
-# ... (rest of the code from your provided mindsearch/models.py file)
-
-
 
 internlm_server = dict(type=LMDeployServer,
                        path='internlm/internlm2_5-7b-chat',
@@ -71,3 +89,17 @@ qwen = dict(type=GPTAPI,
             max_new_tokens=4096,
             repetition_penalty=1.02,
             stop_words=['<|im_end|>'])
+
+def create_model(model_format):
+    if model_format == 'internlm_server':
+        return LMDeployServer(**internlm_server)
+    elif model_format == 'internlm_client':
+        return LMDeployClient(**internlm_client)
+    elif model_format == 'internlm_hf':
+        return HFTransformerCasualLM(**internlm_hf)
+    elif model_format == 'gpt4':
+        return GPTAPI(**gpt4)
+    elif model_format == 'qwen':
+        return GPTAPI(**qwen)
+    else:
+        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
