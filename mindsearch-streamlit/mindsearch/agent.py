@@ -437,6 +437,7 @@ from .mindsearch_prompt import (
     searcher_context_template_cn, searcher_context_template_en
 )
 
+
 def init_agent(lang='cn', model_format='internlm_server'):
     if lang == 'cn':
         graph_prompt = GRAPH_PROMPT_CN
