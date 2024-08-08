@@ -6,3 +6,4 @@ janus
 pydantic
 streamlit
 lagent 
+termcolor
