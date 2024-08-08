@@ -1,3 +1,6 @@
+from . import models
+from . import mindsearch_prompt
+
 import asyncio
 import json
 import logging
