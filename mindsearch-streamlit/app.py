@@ -6,8 +6,8 @@ from sse_starlette.sse import EventSourceResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from mindsearch import init_agent
-# from mindsearch.agent import init_agent
+# from mindsearch import init_agent
+from mindsearch.agent import init_agent
 import janus
 import lagent
 
