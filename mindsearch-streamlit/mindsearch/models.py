@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
-
 from lagent.actions import ActionExecutor, BaseAction
 from lagent.schema import ActionReturn, ActionStatusCode
-
 from googleapiclient.discovery import build
 
 class GoogleSearch(BaseAction):
@@ -39,12 +37,15 @@ class GoogleSearch(BaseAction):
                 }]
             )
 
-# GoogleSearchのインスタンスを作成
+# Create an instance of GoogleSearch
 google_search = GoogleSearch()
 
-# ActionExecutorにGoogleSearchインスタンスを渡す
-action_executor = ActionExecutor(actions=[google_search])
+# Check if GoogleSearch is already registered before adding it
+action_executor = ActionExecutor()
+if "GoogleSearch" not in action_executor.actions:
+    action_executor.register_action(google_search)
 
+# The rest of your model initialization code...
 import mindsearch.agent.models as llm_factory
 from mindsearch.agent.mindsearch_agent import (MindSearchAgent,
                                                MindSearchProtocol)
@@ -55,6 +56,9 @@ from mindsearch.agent.mindsearch_prompt import (
     searcher_context_template_en, searcher_input_template_cn,
     searcher_input_template_en, searcher_system_prompt_cn,
     searcher_system_prompt_en)
+
+
+
 
 internlm_server = dict(type=LMDeployServer,
                        path='internlm/internlm2_5-7b-chat',
@@ -110,6 +114,9 @@ qwen = dict(type=GPTAPI,
             repetition_penalty=1.02,
             stop_words=['<|im_end|>'])
 
+
+
+
 def create_model(model_format):
     if model_format == 'internlm_server':
         return LMDeployServer(**internlm_server)
@@ -122,4 +129,4 @@ def create_model(model_format):
     elif model_format == 'qwen':
         return GPTAPI(**qwen)
     else:
-        raise ValueError(f"サポートされていないモデル形式です: {model_format}")
+        raise ValueError(f"Unsupported model format: {model_format}")
